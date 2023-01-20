@@ -87,6 +87,22 @@
 #define REG_S0_PORT0	0x0404
 #define REG_S0_PORT1	0x0405
 #define REG_S0_IMR		0x042C
+
+
+
+#define REG_S0_RX_RD0	0x0428
+#define REG_S0_RX_RD1	0x0429
+
+#define REG_S0_RX_RSR0	0x0426
+#define REG_S0_RX_RSR1	0x0427
+#define REG_S0_RX_RD0	0x0428
+#define REG_S0_RX_RD1	0x0429
+
+// Rx/Tx Memory
+#define TX_BASE_ADDR	0x4000
+#define RX_BASE_ADDR	0x6000
+#define S0_RXBUF_SIZE	8		// [kB]
+#define S0_RX_MASK		((1024 * S0_RXBUF_SIZE) - 1)
 // Interrupt Mask Register
 #define S0_INT			0x01
 // Socket Registers
@@ -95,6 +111,7 @@
 // Socket_N Command Register - Sn_CR
 #define SOCKET_OPEN		0x01
 #define TCP_LISTEN		0x02
+#define SOCKET_CLOSE	0x10
 #define SOCKET_SEND		0x20
 #define SOCKET_RECV		0x40
 
@@ -105,5 +122,8 @@
 void w5100_writeReg(uint16_t addres, uint8_t data);
 void w5100_ini(void);
 uint8_t w5100_readReg(uint16_t addres);
+uint8_t w5100s_waitConnection();
+void w5100s_socketReOpen();
+void w5100s_readMsg();
 
 #endif /* INC_W5100S_H_ */

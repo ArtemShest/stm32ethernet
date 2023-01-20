@@ -36,7 +36,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+#define RX_MSG_SIZE		12	// 1+10+1
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

@@ -230,7 +230,7 @@ void w5100_ini(void)
       printf ("\t write %d to REG_SIPR3 0x%.4x; read %d\r\n", ipaddr[3], REG_SIPR3, aaa);
   	  HAL_Delay(1);
 
-/*
+
 
   w5100_writeReg(REG_S0_PORT0, 0x00);		// Setting port
 	  HAL_Delay(1);
@@ -243,20 +243,19 @@ void w5100_ini(void)
   	  aaa = w5100_readReg(REG_S0_PORT1);
   	  printf ("\t write %d to REG_S0_PORT1 0x%.4x; read %d\r\n", 10, REG_S0_PORT1, aaa);
   	  HAL_Delay(1);
-*/
+
   //Настраиваем сокет 0
 
 
 
-  //w5100_writeReg(REG_RMSR, 0x55);		// RX memory of Socket_0 = 8kB, others = 0kB
-  w5100_writeReg(REG_RMSR, 0x0); // 1kb 1kb 1kb 1kb
+  w5100_writeReg(REG_RMSR, 0x03); // RX memory of Socket_0 = 8kB, others = 0kB
 	  HAL_Delay(1);
 	  aaa = w5100_readReg(REG_RMSR);
-	  printf ("10. RX memory 1kb 1kb 1kb 1kb\r\n");
+	  printf ("10. RX memory 8kb 0kb 0kb 0kb\r\n");
 	  printf ("\t write %d to REG_RMSR 0x%.4x; read %d\r\n", 0x0, REG_RMSR, aaa);
 	  HAL_Delay(1);
   //w5100_writeReg(REG_TMSR, 0x55);		// TX memory of Socket_0 = 8kB, others = 0kB
-  w5100_writeReg(REG_TMSR, 0x0); // 1kb 1kb 1kb 1kb
+  w5100_writeReg(REG_TMSR, 0x03); // 1kb 1kb 1kb 1kb
 	  HAL_Delay(1);
 	  aaa = w5100_readReg(REG_TMSR);
 	  printf ("11. TX memory 1kb 1kb 1kb 1kb\r\n");
@@ -264,8 +263,8 @@ void w5100_ini(void)
 	  HAL_Delay(1);
 
 
-  //w5500_writeReg(REG_S0_IMR, *(uint8_t*)(RECV));			// RX interrupt enable
-/*
+  w5100_writeReg(REG_S0_IMR, 0x01);			// RX interrupt enable
+
   w5100_writeReg(REG_S0_MR, TCP_MODE);		// Setting TCP protocol
 	  HAL_Delay(1);
 	  aaa = w5100_readReg(REG_S0_MR);
@@ -279,7 +278,98 @@ void w5100_ini(void)
 	  printf ("\t write %d to REG_S0_CR 0x%.4x; read %d\r\n", SOCKET_OPEN, REG_S0_CR, aaa);
 	  HAL_Delay(1);
 
-*/
+
+	  aaa = w5100_readReg(REG_S0_SR);
+	  	  printf ("14. Socket status\r\n");
+	  	  printf ("\t write %d to REG_S0_SR 0x%.4x; read %d\r\n", SOCKET_OPEN, REG_S0_SR, aaa);
+
+  w5100_writeReg(REG_S0_CR, TCP_LISTEN);	// Socket Listen
+	  HAL_Delay(1);
+	  aaa = w5100_readReg(REG_S0_CR);
+	  printf ("15. Socket LISTEN\r\n");
+	  printf ("\t write %d to REG_S0_CR 0x%.4x; read %d\r\n", TCP_LISTEN, REG_S0_CR, aaa);
+	  HAL_Delay(1);
+
+  aaa = w5100_readReg(REG_S0_SR);
+	  printf ("16. Socket status\r\n");
+	  printf ("\t write %d to REG_S0_SR 0x%.4x; read %d\r\n", TCP_LISTEN, REG_S0_SR, aaa);
+
+
+
+}
+
+uint8_t w5100s_waitConnection()
+{
+	uint8_t aaa = w5100_readReg(REG_S0_SR);
+	return aaa;
+}
+
+void w5100s_socketReOpen()
+{
+	uint8_t aaa = 0;
+	  w5100_writeReg(REG_S0_CR, SOCKET_CLOSE);	//  SOCKET_CLOSE
+		  HAL_Delay(1);
+		  aaa = w5100_readReg(REG_S0_SR);
+			  printf ("16. Socket Close\r\n");
+			  printf ("\t write %d to REG_S0_CR 0x%.4x; read %d\r\n", SOCKET_CLOSE, REG_S0_SR, aaa);
+		  HAL_Delay(1);
+
+		  w5100_writeReg(REG_S0_CR, SOCKET_OPEN);	// Socket OPEN
+		 	  HAL_Delay(1);
+		 	  aaa = w5100_readReg(REG_S0_CR);
+		 	  printf ("13. Socket OPEN\r\n");
+		 	  printf ("\t write %d to REG_S0_CR 0x%.4x; read %d\r\n", SOCKET_OPEN, REG_S0_CR, aaa);
+		 	  HAL_Delay(1);
+
+		 	 w5100_writeReg(REG_S0_CR, TCP_LISTEN);	// Socket Listen
+		 		  HAL_Delay(1);
+		 		  aaa = w5100_readReg(REG_S0_CR);
+		 		  printf ("15. Socket OPEN\r\n");
+		 		  printf ("\t write %d to REG_S0_CR 0x%.4x; read %d\r\n", TCP_LISTEN, REG_S0_CR, aaa);
+		 		  HAL_Delay(1);
+
+
+}
+
+
+void w5100s_readMsg()
+{
+	uint16_t get_size;
+	uint16_t start_address;
+	uint16_t offset;
+	uint16_t offset_masked;
+
+
+	// Clear Interrupt Flag
+	w5100_writeReg(REG_S0_IR, RECV);
+
+	get_size = w5100_readReg(REG_S0_RX_RSR0) << 8;
+	get_size += w5100_readReg(REG_S0_RX_RSR1);
+	if(get_size > 0)
+	{
+		uint8_t msg[get_size];
+
+		offset =  w5100_readReg(REG_S0_RX_RD0) << 8;
+		offset += w5100_readReg(REG_S0_RX_RD1);
+
+		offset_masked &= S0_RX_MASK;
+		// Calculate Start Offset Address
+		start_address = RX_BASE_ADDR; // + offset_masked;
+
+		for (uint8_t i = 0; i< get_size; i++)
+		{
+			msg[i] = w5100_readReg(start_address + i);
+			printf ("%d", msg[i]);
+		}
+		printf ("\r\n");
+
+		offset += RX_MSG_SIZE;
+		w5100_writeReg(REG_S0_RX_RD0, offset >> 8);
+		w5100_writeReg(REG_S0_RX_RD1, offset);
+
+		w5100_writeReg(REG_S0_CR, SOCKET_RECV);
+	}
+
 
 }
 

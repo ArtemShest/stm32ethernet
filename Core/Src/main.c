@@ -103,9 +103,43 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t socketState = 0;
   while (1)
   {
 	 HAL_Delay(10);
+
+	 uint8_t aaa = w5100s_waitConnection();
+
+	 if(aaa == socketState) continue;
+
+	 else socketState = aaa;
+
+	 if (socketState == 0x14)
+	 	{
+		  printf ("Socket listen !!!1\r\n");
+		}
+
+	 	 else if (socketState == 0x17)
+		{
+		  printf ("Socket connection is done!!!1\r\n");
+		  w5100s_readMsg();
+		  // проверка на прием сообщения
+		}
+
+		else if (socketState == 0x1c)
+		{
+		  printf ("Socket close wait!!!1\r\n");
+
+		  w5100s_socketReOpen();
+		}
+		else if (socketState == 0x00)
+		{
+		  printf ("Socket close!!!1\r\n");
+
+		}
+
+
+	  printf ("\t socketState %d\r\n", aaa);
 
 	  //net_ini();
     /* USER CODE END WHILE */
